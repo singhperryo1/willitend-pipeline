@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import mysql.connector
+from datetime import date
 
 '''
 To run this Python scripte file,
@@ -30,9 +31,16 @@ crontabe setting:
 # Configure for your database
 destination = "localhost"
 user_name = "root"
-password = "85221677"
+password = "willitend.com"
 datanase_name = "willitend"
 
+# Calculates Days since vaccine was made available
+startDate = date(2021, 2, 20)
+endDate = date.today()
+daysSince = endDate - startDate
+
+# Holds the herd immunity percentage
+herdImPercentage = 0.85
 
 
 def dowload_data():
@@ -60,21 +68,22 @@ def update_info_to_database(df_cleaned):
 
 def insert_into_table(temp_cursor,rows):
 	state_name = rows['id']
-	days_to_herd_immunity = 9999999
 	one_shot_num = int(rows['peopleVaccinated'] - rows['completedVaccination'])
 	two_shot_num = int(rows['completedVaccination'])
 	if (one_shot_num < 0) or (two_shot_num < 0):
 		print("You are trying to write invalid data into database")
 		return
-	vacc_per_day = 0
-	herd_immunity_population = 0
-	stat_population = int(rows['population'])
+	vacc_per_day = two_shot_num/daysSince.days
+	state_population = int(rows['population'])
+	herd_immunity_population = (int(herdImPercentage * state_population))
+	days_to_herd_immunity = (herd_immunity_population-two_shot_num)/vacc_per_day
 	temp_str = "INSERT INTO stateinfo (name,hDays,1Shot,2Shot,vacPerDay,hPop,pop) VALUES(%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE hDays=%s,1Shot=%s,2Shot=%s,vacPerDay=%s,hPop=%s,pop=%s"
-	temp_cursor.execute(temp_str,(state_name,days_to_herd_immunity,one_shot_num,two_shot_num,vacc_per_day,herd_immunity_population,stat_population,days_to_herd_immunity,one_shot_num,two_shot_num,vacc_per_day,herd_immunity_population,stat_population))
+	temp_cursor.execute(temp_str,(state_name,days_to_herd_immunity,one_shot_num,two_shot_num,vacc_per_day,herd_immunity_population,state_population,days_to_herd_immunity,one_shot_num,two_shot_num,vacc_per_day,herd_immunity_population,state_population))
 
 
 def main():
 	dowload_data()
+
 	
 main()
 
