@@ -39,7 +39,7 @@ def dowload_data():
 	print("############################################")
 	url = "https://raw.githubusercontent.com/BloombergGraphics/covid-vaccine-tracker-data/master/data/current-usa.csv"
 	df = pd.read_csv(url)
-	df_cleaned = df.iloc[0:59]
+	df_cleaned = df.iloc[0:51]
 	df_cleaned.to_csv("Vaccine-Info-State-By-State.csv", encoding="utf-8", index=False)
 	update_info_to_database(df_cleaned)
 	print("process completed")
@@ -60,7 +60,7 @@ def update_info_to_database(df_cleaned):
 
 def insert_into_table(temp_cursor,rows):
 	state_name = rows['id']
-	days_to_herd_immunity = 0
+	days_to_herd_immunity = 9999999
 	one_shot_num = int(rows['peopleVaccinated'] - rows['completedVaccination'])
 	two_shot_num = int(rows['completedVaccination'])
 	if (one_shot_num < 0) or (two_shot_num < 0):
